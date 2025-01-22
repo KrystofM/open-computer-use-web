@@ -1,0 +1,21 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Environment variables
+.env
+
+# Agent output files
+/output
+
+# Next.js build output
+.next
+
+# Node.js modules
+node_modules/
+
+# vscode
+.vscode/
