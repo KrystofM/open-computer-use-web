@@ -28,8 +28,11 @@ class InstructionRequest(BaseModel):
     instruction: str
 
 
-async def stream_agent_output(agent, instruction):
+async def stream_agent_output(agent, sandbox, instruction):
     global should_stop
+
+    stream_url = sandbox.get_video_stream_url()
+    yield json.dumps({"type": "stream_url", "data": stream_url}) + "\n"
     try:
         async for output in agent.run(instruction):
             if should_stop:
@@ -58,7 +61,7 @@ async def run_instruction(request: InstructionRequest):
         agent = SandboxAgent(sandbox)
 
         return StreamingResponse(
-            stream_agent_output(agent, request.instruction),
+            stream_agent_output(agent, sandbox, request.instruction),
             media_type="application/x-ndjson",
         )
     except Exception as e:

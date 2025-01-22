@@ -15,9 +15,7 @@ interface Message {
 }
 
 interface ChatSidebarProps {
-  // If you want to pre-load messages, you can pass them in here.
-  messages?: Message[];
-  isLoading: boolean;
+  setStreamUrl: (url: string | null) => void;
 }
 
 // Simple helper to interpret NDJSON lines safely
@@ -59,16 +57,15 @@ async function* ndjsonStream(response: Response) {
 }
 
 export default function ChatSidebar({
-  messages: initialMessages = [],
-  isLoading,
+  setStreamUrl,
 }: ChatSidebarProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>();
   const [input, setInput] = useState('');
   const [languageModel, setLanguageModel] = useLocalStorage<LLMModelConfig>('languageModel', {
     model: 'claude-3-5-sonnet-latest',
   });
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -121,9 +118,9 @@ export default function ChatSidebar({
 
   async function handleSend() {
     if (!input.trim()) return;
-    setMessages([...messages, { role: 'user', content: input }]);
+    setMessages([...(messages || []), { role: 'user', content: input }]);
     setInput('');
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       const response = await fetch('/api/run', {
@@ -137,7 +134,7 @@ export default function ChatSidebar({
           const { type, content = '', name = '' } = chunk.data;
           
           setMessages((prev) => [
-            ...prev,
+            ...(prev || []),
             {
               role: type, // e.g. 'thought'
               content: type === 'action' && name ? `${name}: ${content}` : content,
@@ -150,7 +147,7 @@ export default function ChatSidebar({
     } catch (err) {
       console.error('Error streaming from /api/run:', err);
     } finally {
-      setLoading(false); // set loading to false once response is done
+      setIsLoading(false); // set loading to false once response is done
     }
   }
 
@@ -173,7 +170,7 @@ export default function ChatSidebar({
   return (
     <div className="w-1/2 border-r border-gray-200 flex flex-col">
       <div className="flex-1 overflow-y-auto p-4">
-        {messages.map((message, index) => {
+        {messages && messages.map((message, index) => {
           const displayedContent = getDisplayedContent(message.content);
           const messageStyle = getMessageStyle(message.role);
 
