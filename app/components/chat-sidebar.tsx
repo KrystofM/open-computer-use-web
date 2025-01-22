@@ -88,25 +88,24 @@ export default function ChatSidebar({
     }
   }
 
-  // Return the icon depending on the role.
   function getIconForRole(role: string) {
     switch (role) {
       case 'user':
-        return <FaUser className="text-blue-500" />;
+        return <FaUser className="text-[#ff8800]" />;
       case 'assistant':
-        return <FaRobot className="text-green-600" />;
+        return <FaRobot className="text-black" />;
       case 'system':
-        return <FaCogs className="text-gray-500" />;
+        return <FaCogs className="text-black" />;
       case 'thought':
-        return <FaLightbulb className="text-purple-500" />;
+        return <FaLightbulb className="text-black" />;
       case 'objective':
-        return <FaBullseye className="text-orange-500" />;
+        return <FaBullseye className="text-black" />;
       case 'action':
-        return <FaPlay className="text-red-500" />;
+        return <FaPlay className="text-black" />;
       case 'observation':
-        return <FaEye className="text-teal-500" />;
+        return <FaEye className="text-black" />;
       default:
-        return <FaCogs className="text-gray-400" />;
+        return <FaCogs className="text-black" />;
     }
   }
 
@@ -114,19 +113,7 @@ export default function ChatSidebar({
   function getMessageStyle(role: string) {
     switch (role) {
       case 'user':
-        return 'bg-blue-100 ml-auto justify-end';
-      case 'assistant':
-        return 'bg-gray-100';
-      case 'system':
-        return 'bg-gray-200';
-      case 'thought':
-        return 'bg-purple-100';
-      case 'objective':
-        return 'bg-orange-100';
-      case 'action':
-        return 'bg-red-100';
-      case 'observation':
-        return 'bg-teal-100';
+        return 'bg-[#ffe1bf]';
       default:
         return 'bg-gray-50';
     }
