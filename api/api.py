@@ -1,8 +1,9 @@
+import asyncio
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from os_computer_use.sandbox_agent import SandboxAgent
-from os_computer_use.streaming import Sandbox, DisplayClient
+from os_computer_use.streaming import Sandbox
 import uvicorn
 import json
 
@@ -31,8 +32,13 @@ class InstructionRequest(BaseModel):
 async def stream_agent_output(agent, sandbox, instruction):
     global should_stop
 
-    stream_url = sandbox.get_video_stream_url()
-    yield json.dumps({"type": "stream_url", "data": stream_url}) + "\n"
+    print("Starting stream")
+    sandbox.start_stream()
+    yield json.dumps({"type": "stream_started", "data": "stream started"}) + "\n"
+    # wait for 5 seconds
+    await asyncio.sleep(12)
+    yield json.dumps({"type": "stream_awaited", "data": "stream awaited"}) + "\n"
+
     try:
         async for output in agent.run(instruction):
             if should_stop:
@@ -57,7 +63,7 @@ async def run_instruction(request: InstructionRequest):
     should_stop = False
 
     try:
-        sandbox = Sandbox(video_stream=True)
+        sandbox = Sandbox()
         agent = SandboxAgent(sandbox)
 
         return StreamingResponse(

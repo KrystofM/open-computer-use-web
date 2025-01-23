@@ -1,3 +1,4 @@
+import os
 from gradio_client import Client, handle_file
 from os_computer_use.logging import logger
 
@@ -14,7 +15,7 @@ class OSAtlasProvider:
     """
 
     def __init__(self):
-        self.client = Client(OSATLAS_HUGGINGFACE_SOURCE)
+        self.client = Client(OSATLAS_HUGGINGFACE_SOURCE, hf_token=os.getenv("HF_TOKEN"))
 
     def call(self, prompt, image_data):
         result = self.client.predict(
