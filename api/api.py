@@ -13,18 +13,6 @@ app = FastAPI()
 should_stop = False
 
 
-@app.on_event("startup")
-async def startup_event():
-    # Initialize any necessary components here
-    pass
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    # Clean up resources here
-    pass
-
-
 class InstructionRequest(BaseModel):
     instruction: str
 
@@ -59,7 +47,6 @@ async def stream_agent_output(agent, sandbox, instruction):
 @app.post("/run")
 async def run_instruction(request: InstructionRequest):
     global should_stop
-    # Reset the stop flag each time we run a new instruction
     should_stop = False
 
     try:
