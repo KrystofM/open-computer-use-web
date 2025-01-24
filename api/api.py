@@ -26,24 +26,19 @@ async def stream_agent_output(instruction):
         sandbox = Sandbox()
         agent = SandboxAgent(sandbox)
         sandbox.start_stream()
-        print("stream started")
+
         yield json.dumps({"type": "stream_started", "data": "stream started"}) + "\n"
-        # should make this dynamic
         await asyncio.sleep(12)
-        print("stream awaited")
         yield json.dumps({"type": "stream_awaited", "data": "stream awaited"}) + "\n"
 
     try:
         async for output in agent.run(instruction):
-            print("agent output")
             if should_stop:
-                # Notify that we are stopping and break out
                 yield json.dumps({"type": "complete", "status": "stopped"}) + "\n"
                 break
             yield json.dumps({"type": "agent_output", "data": output}) + "\n"
 
         else:
-            # If we never broke early due to stop, mark normal completion
             yield json.dumps({"type": "complete", "status": "success"}) + "\n"
 
     except Exception as e:
