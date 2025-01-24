@@ -7,6 +7,7 @@ import modelsList from '@/lib/models.json'
 import templates, { TemplateId } from '@/lib/templates'
 import { useLocalStorage } from 'usehooks-ts'
 import { LLMModelConfig } from '@/lib/models'
+import { ndjsonStream } from '@/utils/ndjsonStream';
 import { ChatPicker } from './chat-picker';
 
 interface Message {
@@ -16,38 +17,6 @@ interface Message {
 
 interface ChatSidebarProps {
   setStreamUrl: (url: string | null) => void;
-}
-
-async function* ndjsonStream(response: Response) {
-  const reader = response.body?.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let buffer = '';
-
-  if (!reader) return;
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let lines = buffer.split('\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed !== '') {
-        try {
-          yield JSON.parse(trimmed);
-        } catch {
-        }
-      }
-    }
-  }
-  if (buffer.trim() !== '') {
-    try {
-      yield JSON.parse(buffer);
-    } catch {
-    }
-  }
 }
 
 export default function ChatSidebar({
@@ -69,7 +38,6 @@ export default function ChatSidebar({
     setLanguageModel({ ...languageModel, ...e });
   }
 
-  // If content is valid JSON and presumably an action, hide or replace with a short note
   function getDisplayedContent(content: string) {
     try {
       JSON.parse(content);
@@ -100,7 +68,6 @@ export default function ChatSidebar({
     }
   }
 
-  // Determine container style depending on role
   function getMessageStyle(role: string) {
     switch (role) {
       case 'user':
@@ -161,12 +128,6 @@ export default function ChatSidebar({
     }
   }
 
-  // Simple form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSend();
-  };
-
   return (
     <div className="w-1/2 border-r border-gray-200 flex flex-col">
       <div className="flex-1 overflow-y-auto p-4">
@@ -198,7 +159,10 @@ export default function ChatSidebar({
           stop={handleStop}
           input={input}
           handleInputChange={(e) => setInput(e.target.value)}
-          handleSubmit={handleSubmit}
+          handleSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
         >
           <ChatPicker
             models={modelsList.models}
