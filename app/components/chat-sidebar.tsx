@@ -18,7 +18,6 @@ interface ChatSidebarProps {
   setStreamUrl: (url: string | null) => void;
 }
 
-// Simple helper to interpret NDJSON lines safely
 async function* ndjsonStream(response: Response) {
   const reader = response.body?.getReader();
   const decoder = new TextDecoder('utf-8');
@@ -31,7 +30,6 @@ async function* ndjsonStream(response: Response) {
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     let lines = buffer.split('\n');
-    // Keep the last (possibly partial) line in buffer
     buffer = lines.pop() || '';
 
     for (const line of lines) {
@@ -40,18 +38,14 @@ async function* ndjsonStream(response: Response) {
         try {
           yield JSON.parse(trimmed);
         } catch {
-          // ignore JSON parse errors on malformed lines
         }
       }
     }
   }
-
-  // Flush the remaining buffer
   if (buffer.trim() !== '') {
     try {
       yield JSON.parse(buffer);
     } catch {
-      // ignore any trailing malformed JSON
     }
   }
 }
@@ -130,7 +124,14 @@ export default function ChatSidebar({
       });
 
       for await (const chunk of ndjsonStream(response)) {
-        if (chunk.type === 'agent_output') {
+        if (chunk.type === 'stream_started') {
+          setMessages((prev) => [
+            ...(prev || []),
+            { role: 'system', content: 'Waiting for stream...' },  
+          ]);
+        } else if (chunk.type === 'stream_awaited') {
+          setStreamUrl(chunk.url || "localhost:8000"); 
+        } else if (chunk.type === 'agent_output') {
           const { type, content = '', name = '' } = chunk.data;
           
           setMessages((prev) => [
@@ -140,14 +141,13 @@ export default function ChatSidebar({
               content: type === 'action' && name ? `${name}: ${content}` : content,
             },
           ]);
-        } else if (chunk.type === 'complete' || chunk.status === 'stopped') {
-          // The conversation might have ended; handle if needed
+        } else if (chunk.type === 'complete' || chunk.status === 'stopped') {          
         }
       }
     } catch (err) {
       console.error('Error streaming from /api/run:', err);
     } finally {
-      setIsLoading(false); // set loading to false once response is done
+      setIsLoading(false);
     }
   }
 

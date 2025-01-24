@@ -1,55 +1,40 @@
-import { useEffect, useRef } from 'react';
-import Hls from 'hls.js';
+import React, { useEffect, useState } from 'react';
+import MuxPlayer from '@mux/mux-player-react';
 
 interface DisplayAreaProps {
   streamUrl: string | null;
 }
 
 export default function DisplayArea({ streamUrl }: DisplayAreaProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
-    if (!streamUrl || !videoRef.current) return;
-
-    const video = videoRef.current;
-    
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-      });
-      
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
-      
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(console.error);
-      });
-
-      return () => {
-        hls.destroy();
-      };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // For Safari which has native HLS support
-      video.src = streamUrl;
-      video.play().catch(console.error);
-    }
+    setKey(prevKey => prevKey + 1);
+    console.log("streamUrl", streamUrl);
   }, [streamUrl]);
 
+  const reloadPlayer = () => {
+    setKey(prevKey => prevKey + 1);
+  };
+
   return (
-    <div className="w-full h-full flex items-center justify-center bg-black">
+    <div className="w-full h-full flex items-center justify-center bg-white">
       {streamUrl ? (
-        <video
-          ref={videoRef}
-          className="max-w-full max-h-full"
-          controls
-          playsInline
-          autoPlay
-          muted
-        />
+        <>
+          <MuxPlayer
+            key={key} // Use the key to force re-render
+            playbackId="lEmVXGBHFFx9301N900nx5IUT2Rrt1a01013tdq7VEMo86E"
+            streamType="on-demand"
+            controls
+            autoPlay
+            muted
+            className="max-w-full max-h-full"
+          />
+          <button onClick={reloadPlayer}>Reload Player</button>
+        </>
       ) : (
-        <div className="text-white">Waiting for stream...</div>
+        <p>Please type a message to start the live stream.</p>
       )}
     </div>
   );
-} 
+}

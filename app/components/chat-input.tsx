@@ -76,7 +76,7 @@ export function ChatInput({
             className="text-normal px-3 resize-none ring-0 bg-inherit w-full m-0 outline-none"
             required={true}
             placeholder="Describe your app..."
-            disabled={isErrored}
+            disabled={isLoading}
             value={input}
             onChange={handleInputChange}
           />

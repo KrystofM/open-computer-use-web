@@ -12,13 +12,10 @@ export async function POST(request: Request) {
       body: JSON.stringify({ instruction: body.instruction }),
     });
 
-    // Create a TransformStream to forward the response
     const { readable, writable } = new TransformStream();
     
-    // Pipe the response to our transform stream
     response.body?.pipeTo(writable);
     
-    // Return a streaming response
     return new Response(readable, {
       headers: {
         'Content-Type': 'application/x-ndjson',
