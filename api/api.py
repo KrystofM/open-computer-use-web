@@ -11,24 +11,31 @@ app = FastAPI()
 
 # Global flag to indicate when a run should stop
 should_stop = False
+sandbox = None
+agent = None
 
 
 class InstructionRequest(BaseModel):
     instruction: str
 
 
-async def stream_agent_output(agent, sandbox, instruction):
-    global should_stop
+async def stream_agent_output(instruction):
+    global should_stop, sandbox, agent
 
-    print("Starting stream")
-    sandbox.start_stream()
-    yield json.dumps({"type": "stream_started", "data": "stream started"}) + "\n"
-    # wait for 5 seconds
-    await asyncio.sleep(12)
-    yield json.dumps({"type": "stream_awaited", "data": "stream awaited"}) + "\n"
+    if sandbox is None or agent is None:
+        sandbox = Sandbox()
+        agent = SandboxAgent(sandbox)
+        sandbox.start_stream()
+        print("stream started")
+        yield json.dumps({"type": "stream_started", "data": "stream started"}) + "\n"
+        # should make this dynamic
+        await asyncio.sleep(12)
+        print("stream awaited")
+        yield json.dumps({"type": "stream_awaited", "data": "stream awaited"}) + "\n"
 
     try:
         async for output in agent.run(instruction):
+            print("agent output")
             if should_stop:
                 # Notify that we are stopping and break out
                 yield json.dumps({"type": "complete", "status": "stopped"}) + "\n"
@@ -46,15 +53,12 @@ async def stream_agent_output(agent, sandbox, instruction):
 
 @app.post("/run")
 async def run_instruction(request: InstructionRequest):
-    global should_stop
+    global should_stop, sandbox, agent
     should_stop = False
 
     try:
-        sandbox = Sandbox()
-        agent = SandboxAgent(sandbox)
-
         return StreamingResponse(
-            stream_agent_output(agent, sandbox, request.instruction),
+            stream_agent_output(request.instruction),
             media_type="application/x-ndjson",
         )
     except Exception as e:
