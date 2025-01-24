@@ -104,7 +104,7 @@ export default function ChatSidebar({
           setMessages((prev) => [
             ...(prev || []),
             {
-              role: type, // e.g. 'thought'
+              role: type,
               content: type === 'action' && name ? `${name}: ${content}` : content,
             },
           ]);
