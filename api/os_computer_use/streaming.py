@@ -14,9 +14,7 @@ class Sandbox(SandboxBase):
         configuration.username = os.environ["MUX_TOKEN_ID"]
         configuration.password = os.environ["MUX_TOKEN_SECRET"]
         self.live_api = mux_python.LiveStreamsApi(mux_python.ApiClient(configuration))
-        self.playback_ids_api = mux_python.PlaybackIDApi(
-            mux_python.ApiClient(configuration)
-        )
+        self.playback_id = None
 
     def create_stream(self):
         new_asset_settings = mux_python.CreateAssetRequest(
@@ -51,11 +49,12 @@ class Sandbox(SandboxBase):
             envs={"STREAM_KEY": response.data.stream_key},
         )
 
-        playback_id = response.data.playback_ids[0].id
-
         await self.wait_for_stream_active(response.data.id)
+        self.playback_id = response.data.playback_ids[0].id
+        return self.playback_id
 
-        return playback_id
+    def is_stream_active(self):
+        return self.playback_id is not None
 
     def kill(self):
         if hasattr(self, "process"):

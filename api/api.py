@@ -12,6 +12,7 @@ app = FastAPI()
 
 class InstructionRequest(BaseModel):
     instruction: str
+    sandbox_id: str
 
 
 def get_sandbox_and_agent():
@@ -20,10 +21,7 @@ def get_sandbox_and_agent():
     return sandbox, agent
 
 
-async def stream_agent_output(instruction, sandbox, agent):
-    yield json.dumps({"type": "stream_started"}) + "\n"
-    playback_id = await sandbox.start_stream()
-    yield json.dumps({"type": "stream_awaited", "data": playback_id}) + "\n"
+async def stream_agent_output(instruction, agent):
     try:
         async for output in agent.run(instruction):
             yield json.dumps({"type": "agent_output", "data": output}) + "\n"
@@ -34,14 +32,24 @@ async def stream_agent_output(instruction, sandbox, agent):
         raise
 
 
+@app.post("/create_sandbox")
+async def create_sandbox():
+    sandbox = Sandbox()
+    playback_id = await sandbox.start_stream()
+    return {"sandbox_id": sandbox.sandbox_id, "playback_id": playback_id}
+
+
 @app.post("/run")
-async def run_instruction(
-    request: InstructionRequest, sandbox_and_agent=Depends(get_sandbox_and_agent)
-):
-    sandbox, agent = sandbox_and_agent
+async def run_instruction(request: InstructionRequest):
+    print(request)
+    try:
+        sandbox = Sandbox.connect(request.sandbox_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    agent = SandboxAgent(sandbox)
     try:
         return StreamingResponse(
-            stream_agent_output(request.instruction, sandbox, agent),
+            stream_agent_output(request.instruction, agent),
             media_type="application/x-ndjson",
         )
     except Exception as e:

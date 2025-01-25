@@ -29,6 +29,7 @@ export default function ChatSidebar({
   });
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sandboxId, setSandboxId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,23 +84,32 @@ export default function ChatSidebar({
     setInput('');
     setIsLoading(true);
 
+    let data = null;
+    if (!sandboxId) {
+      setMessages((prev) => [
+        ...(prev || []),
+        { role: 'system', content: 'Waiting for stream...' },  
+      ]);
+      const response = await fetch('/api/create_sandbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      data = await response.json();
+      setSandboxId(data.sandbox_id);
+      setStreamPlaybackId(data.playback_id);
+    }    
+
+    console.log("sandboxId", sandboxId);
     try {
+      console.log("running instruction", input, sandboxId ?? data.sandbox_id);
       const response = await fetch('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instruction: input }),
+        body: JSON.stringify({ instruction: input, sandbox_id: sandboxId ?? data.sandbox_id }),
       });
 
       for await (const chunk of ndjsonStream(response)) {
-        if (chunk.type === 'stream_started') {
-          setMessages((prev) => [
-            ...(prev || []),
-            { role: 'system', content: 'Waiting for stream...' },  
-          ]);
-        } else if (chunk.type === 'stream_awaited') {
-          console.log("stream_awaited", chunk.data);
-          setStreamPlaybackId(chunk.data); 
-        } else if (chunk.type === 'agent_output') {
+        if (chunk.type === 'agent_output') {
           const { type, content = '', name = '' } = chunk.data;
           
           setMessages((prev) => [

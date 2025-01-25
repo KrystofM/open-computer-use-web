@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ instruction: body.instruction }),
+      body: JSON.stringify({ instruction: body.instruction, sandbox_id: body.sandbox_id }),
     });
 
     const { readable, writable } = new TransformStream();
