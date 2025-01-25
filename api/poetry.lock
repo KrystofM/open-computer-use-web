@@ -662,6 +662,23 @@ files = [
 traitlets = "*"
 
 [[package]]
+name = "mux-python"
+version = "3.20.0"
+description = "Mux API"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "mux_python-3.20.0-py3-none-any.whl", hash = "sha256:ec8d5e656eeb35f5ca7ffa5a623447e630401a789b555bea6a07b42047535cc9"},
+    {file = "mux_python-3.20.0.tar.gz", hash = "sha256:d92b7d8a0d0f254bd4962a9d9593eebdd9c167c7ad2549e28eee405eba9f54bc"},
+]
+
+[package.dependencies]
+python-dateutil = "*"
+six = ">=1.10"
+urllib3 = ">=1.25.3"
+
+[[package]]
 name = "openai"
 version = "1.59.9"
 description = "The official Python library for the openai API"
@@ -1324,4 +1341,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "302c89eb2f5b56271f55f051e82c29b41eda6089a433514f7d82c60694885c07"
+content-hash = "6506764f2e7b30dc31e172c51df5d54635ff97c1889a6559b19a864427cb1f21"

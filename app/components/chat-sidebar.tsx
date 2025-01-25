@@ -16,11 +16,11 @@ interface Message {
 }
 
 interface ChatSidebarProps {
-  setStreamUrl: (url: string | null) => void;
+  setStreamPlaybackId: (url: string | null) => void;
 }
 
 export default function ChatSidebar({
-  setStreamUrl,
+  setStreamPlaybackId,
 }: ChatSidebarProps) {
   const [messages, setMessages] = useState<Message[]>();
   const [input, setInput] = useState('');
@@ -97,7 +97,8 @@ export default function ChatSidebar({
             { role: 'system', content: 'Waiting for stream...' },  
           ]);
         } else if (chunk.type === 'stream_awaited') {
-          setStreamUrl(chunk.url || "localhost:8000"); 
+          console.log("stream_awaited", chunk.data);
+          setStreamPlaybackId(chunk.data); 
         } else if (chunk.type === 'agent_output') {
           const { type, content = '', name = '' } = chunk.data;
           

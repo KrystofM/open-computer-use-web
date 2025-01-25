@@ -42,7 +42,6 @@ class GeminiProvider(LLMProvider):
 
 # Define the models to use in the agent
 
-# grounding_model = ShowUIProvider()
 grounding_model = OSAtlasProvider()
 
 vision_model = FireworksProvider("llama3.2")
