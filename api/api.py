@@ -15,12 +15,6 @@ class InstructionRequest(BaseModel):
     sandbox_id: str
 
 
-def get_sandbox_and_agent():
-    sandbox = Sandbox()
-    agent = SandboxAgent(sandbox)
-    return sandbox, agent
-
-
 async def stream_agent_output(instruction, agent):
     try:
         async for output in agent.run(instruction):
@@ -57,8 +51,8 @@ async def run_instruction(request: InstructionRequest):
 
 
 @app.post("/stop")
-async def stop_run(sandbox_and_agent=Depends(get_sandbox_and_agent)):
-    sandbox, _ = sandbox_and_agent
+async def stop_run(sandbox_id: str):
+    sandbox = Sandbox.connect(sandbox_id)
     sandbox.kill()
     return {"detail": "Stop has been requested."}
 
