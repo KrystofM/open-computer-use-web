@@ -26,7 +26,7 @@ tools = {
 
 class SandboxAgent:
 
-    def __init__(self, sandbox, output_dir=".", save_logs=True):
+    def __init__(self, sandbox, output_dir=".", save_logs=False):
         super().__init__()
         self.messages = []  # Agent memory
         self.sandbox = sandbox  # E2B sandbox
@@ -188,7 +188,7 @@ class SandboxAgent:
     async def run(self, instruction):
         self.messages.append(Message(f"OBJECTIVE: {instruction}"))
         yield {"type": "objective", "content": instruction}
-        logger.log(f"USER: {instruction}", print=False)        
+        logger.log(f"USER: {instruction}", print=False)
 
         should_continue = True
         while should_continue:
@@ -203,9 +203,7 @@ class SandboxAgent:
                         role="system",
                     ),
                     *self.messages,
-                    Message(
-                        logger.log(f"THOUGHT: {thought}", "green")
-                    ),
+                    Message(logger.log(f"THOUGHT: {thought}", "green")),
                     Message(
                         "I will now use tool calls to take these actions, or use the stop command if the objective is complete.",
                     ),
@@ -235,5 +233,5 @@ class SandboxAgent:
                     Message(logger.log(f"OBSERVATION: {result}", "yellow"))
                 )
                 yield {"type": "observation", "content": result}
-        
+
         yield None  # Signal completion
