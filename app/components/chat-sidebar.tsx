@@ -30,6 +30,8 @@ export default function ChatSidebar({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,11 +92,18 @@ export default function ChatSidebar({
         ...(prev || []),
         { role: 'system', content: 'Waiting for stream...' },  
       ]);
-      const response = await fetch('/api/create_sandbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      data = await response.json();
+      try {
+        const response = await fetch('/api/create_sandbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        data = await response.json();
+      } catch (error) {
+        console.error('Error creating sandbox:', error);        
+        setIsError(true);
+        setErrorMessage('Failed to create sandbox');
+        return;
+      }
       setSandboxId(data.sandbox_id);
       setStreamPlaybackId(data.playback_id);
     }    
@@ -164,9 +173,9 @@ export default function ChatSidebar({
       <div className="p-4">
         <ChatInput
           retry={() => {}}
-          isErrored={false}
+          isErrored={isError}
+          errorMessage={errorMessage}
           isLoading={isLoading}
-          isRateLimited={false}
           stop={handleStop}
           input={input}
           handleInputChange={(e) => setInput(e.target.value)}

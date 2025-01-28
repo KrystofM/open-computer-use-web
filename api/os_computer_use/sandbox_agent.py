@@ -1,4 +1,3 @@
-from os_computer_use.models import vision_model, action_model, grounding_model
 from os_computer_use.llm_helpers import (
     Message,
     Text,
@@ -26,13 +25,24 @@ tools = {
 
 class SandboxAgent:
 
-    def __init__(self, sandbox, output_dir=".", save_logs=False):
+    def __init__(
+        self,
+        sandbox,
+        vision_model,
+        action_model,
+        grounding_model,
+        output_dir=".",
+        save_logs=False,
+    ):
         super().__init__()
         self.messages = []  # Agent memory
         self.sandbox = sandbox  # E2B sandbox
         self.latest_screenshot = None  # Most recent PNG of the scren
         self.image_counter = 0  # Current screenshot number
         self.tmp_dir = tempfile.mkdtemp()  # Folder to store screenshots
+        self.vision_model = vision_model
+        self.action_model = action_model
+        self.grounding_model = grounding_model
 
         # Set the log file location
         if save_logs:
@@ -129,7 +139,7 @@ class SandboxAgent:
     def click_element(self, query, click_command, action_name="click"):
         """Base method for all click operations"""
         self.take_screenshot()
-        position = grounding_model.call(query, self.latest_screenshot)
+        position = self.grounding_model.call(query, self.latest_screenshot)
         dot_image = draw_big_dot(Image.open(self.latest_screenshot), position)
         filepath = self.save_image(dot_image, "location")
         logger.log(f"{action_name} {filepath})", "gray")
@@ -164,7 +174,7 @@ class SandboxAgent:
         convert_to_content = lambda message: (
             Base64Image(message) if isinstance(message, bytes) else Text(message)
         )
-        return vision_model.call(
+        return self.vision_model.call(
             [
                 *self.messages,
                 Message(
@@ -196,7 +206,7 @@ class SandboxAgent:
             self.sandbox.set_timeout(60)
 
             thought = self.append_screenshot()
-            content, tool_calls = action_model.call(
+            content, tool_calls = self.action_model.call(
                 [
                     Message(
                         "You are an AI assistant with computer use abilities.",

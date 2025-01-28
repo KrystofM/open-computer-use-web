@@ -7,8 +7,8 @@ import TextareaAutosize from 'react-textarea-autosize'
 export function ChatInput({
   retry,
   isErrored,
+  errorMessage,
   isLoading,
-  isRateLimited,
   stop,
   input,
   handleInputChange,
@@ -17,8 +17,8 @@ export function ChatInput({
 }: {
   retry: () => void
   isErrored: boolean
+  errorMessage: string
   isLoading: boolean
-  isRateLimited: boolean
   stop: () => void
   input: string
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
@@ -44,21 +44,13 @@ export function ChatInput({
     >
       {isErrored && (
         <div
-          className={`flex items-center p-1.5 text-sm font-medium mb-2 rounded-xl ${
-            isRateLimited
-              ? 'bg-orange-400/10 text-orange-400'
-              : 'bg-red-400/10 text-red-400'
-          }`}
+          className={`flex items-center p-1.5 text-sm font-medium mb-2 rounded-xl bg-red-400/10 text-red-400`}
         >
           <span className="flex-1 px-1.5">
-            {isRateLimited
-              ? 'You have reached your request limit for the day.'
-              : 'An unexpected error has occurred.'}
+            {errorMessage}
           </span>
           <button
-            className={`px-2 py-1 rounded-sm ${
-              isRateLimited ? 'bg-orange-400/20' : 'bg-red-400/20'
-            }`}
+            className={`px-2 py-1 rounded-sm bg-red-400/20`}
             onClick={retry}
           >
             Try again

@@ -45,5 +45,4 @@ class GeminiProvider(LLMProvider):
 grounding_model = OSAtlasProvider()
 
 vision_model = FireworksProvider("llama3.2")
-
 action_model = FireworksProvider("llama3.3")
